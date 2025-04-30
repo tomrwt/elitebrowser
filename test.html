@@ -6,10 +6,6 @@
     <title>Galactic Chart</title>
 
     <style>
-
-        body {background-color: rgb(0, 0, 0); color: rgb(255, 255, 255); font-family: 'Courier New', Courier, monospace }
-
-
         .wrapper {
             display: grid;
             grid-template-columns: 430px 84px;
@@ -21,8 +17,6 @@
             grid-column-end: 3;
             grid-row-start: 1;
             grid-row-end: 2;
-            text-align: center; width: 512px; align; border-style: solid; border-width: 1px;
-            padding-top: 0px;
         }
         #map {
             grid-column-start: 1;
@@ -49,10 +43,10 @@
         }
 
 
-        
-      
+        body {background-color: rgb(0, 0, 0); color: rgb(255, 255, 255); font-family: monospace; }
+        .screen   {text-align: center;width: 512px; align; border-style: solid; border-width: 1px;}
         p {font-size: 18px}
-        h1 {margin: 8px;}
+        h1 {color: rgb(255, 255, 255); text-align: center;width: 512px; align; border-style: solid; border-width: 1px;}
         #pointSystem {color: red;}
         tr   {font-size: 8px}
         button {font-family: sans-serif}
@@ -70,14 +64,11 @@
     <canvas id="galCanvas" width="512" height="256" ></canvas>
     </div>
     <div id="but">
-    <button id="nextGal" type="button">next galaxy</button>
+
     </div>
 <!--    <p id="pointSystem"></p>*/   -->
 
-    <div id="sysDatScr">
-        <h2 id = "sysDatTitle"></h2>
-        <p id = "sysDatText"></p>
-    </div>
+
 
     </div>
 
@@ -85,7 +76,7 @@
 
 </body>
 
-<script src="script.js"></script>
+    
 
 
 

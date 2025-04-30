@@ -5,8 +5,6 @@ s0 = rootSeed[0]
 s1 = rootSeed[1]
 s2 = rootSeed[2]
 
-
-// twoCharTokens text tokens 128-159 from Elite source code variable QQ16 (token 143 is "A?": not sure why, the ? isn't printed in system names)
 const twoCharTokens = ["AL","LE","XE","GE","ZA","CE","BI","SO","US","ES","AR","MA","IN","DI","RE","A","ER","AT","EN","BE","RA","LA","VE","TI","ED","OR","QU","AN","TE","IS","RI","ON"]
 const govTypes = ["Anarchy","Feudal","Multi-government","Dicatorship","Communist","Confederacy","Democracy","Corporate State"]
 const ecoTypes = ["Rich Industrial", "Average Industrial", "Poor Industrial", "Mainly Industrial", "Mainly Agricultural", "Rich Agricultural", "Average Agricultural", "Poor Agricultural"]
@@ -25,31 +23,32 @@ const speTypes = [["Large ", "Fierce ", "Small "], ["Green ", "Red ", "Yellow ",
 var sys = []
 
 var galDisp = 0
-
-var shortRange = false
-
 var sysDisp
 var sysCen
+var shortRange = false
 
-
-var canvas = document.getElementById('galCanvas');
-var ctx = canvas.getContext('2d');
-
-
-
-
+const canvas = document.getElementById('galCanvas');
+const ctx = canvas.getContext('2d');
+ctx.fillStyle = "yellow ";
+mW = canvas.width
+mH = canvas.height
+mC = canvas.width / 256
 const title = document.getElementById("title")
 const poiSys = document.getElementById("pointSystem")
 const sysDatScr = document.getElementById("sysDatScr")
 const sysDatTitle = document.getElementById("sysDatTitle")
 const sysDatText = document.getElementById("sysDatText")
 
+
+sysDatText.innerHTML = window.visualViewport.width
+
+
 const nextGalBut = document.getElementById("nextGal")
 
-ctx.fillStyle = "yellow ";
+
+
 
 systemSelected = false
-
 for (g = 0; g < 8; g++){
 
     g0 = s0
@@ -79,7 +78,7 @@ for (g = 0; g < 8; g++){
 
 galDisp = 0
 for (s = 0; s < 256; s++){
-ctx.fillRect( sys[0][s].x * 2, sys[0][s].y * 2, sys[0][s].pw, 1 );
+ctx.fillRect( sys[0][s].x * mC, sys[0][s].y * mC, sys[0][s].pw, 1 );
 }
 
 //let canvasElem = document.getElementById("galCanvas");
@@ -100,7 +99,7 @@ nextGalBut.addEventListener("click", function(){
 
 function nextGalaxy(){
 
-    ctx.clearRect(0, 0, 512, 256)
+    ctx.clearRect(0, 0, mW, mH)
     sysDatTitle.innerHTML = ""
     sysDatText.innerHTML = ""
     nextGalBut.innerHTML = "next galaxy"
