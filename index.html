@@ -8,11 +8,13 @@
     <style>
 
         body {background-color: rgb(0, 0, 0); color: rgb(255, 255, 255); font-family: 'Courier New', Courier, monospace }
+        
+
 
 
         .wrapper {
             display: grid;
-            grid-template-columns: 430px 84px;
+            grid-template-columns: minmax(240px, 430px) 84px;
             
         }
         
@@ -21,7 +23,7 @@
             grid-column-end: 3;
             grid-row-start: 1;
             grid-row-end: 2;
-            text-align: center; width: 512px; align; border-style: solid; border-width: 1px;
+            text-align: center; border-style: solid; border-width: 1px;
             padding-top: 0px;
         }
         #map {
@@ -49,7 +51,6 @@
         }
 
 
-        
       
         p {font-size: 18px}
         h1 {margin: 8px;}

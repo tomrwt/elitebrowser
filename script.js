@@ -27,20 +27,38 @@ var sysDisp
 var sysCen
 var shortRange = false
 
+
+const mapBox = document.getElementById("map")
 const canvas = document.getElementById('galCanvas');
+
+mW = mapBox.getBoundingClientRect().width - 2
+
+
+
+mH = mW / 2
+mC = mW / 256
+
+canvas.width = mW
+canvas.height = mH
+
+
+
 const ctx = canvas.getContext('2d');
 ctx.fillStyle = "yellow ";
-mW = canvas.width
-mH = canvas.height
-mC = canvas.width / 256
+
+
+//ctx.canvas.width = mapBox.getBoundingClientRect().width - 2
+//ctx.canvas.height = ctx.canvas.width / 2
+
+
+
+
 const title = document.getElementById("title")
 const poiSys = document.getElementById("pointSystem")
 const sysDatScr = document.getElementById("sysDatScr")
 const sysDatTitle = document.getElementById("sysDatTitle")
 const sysDatText = document.getElementById("sysDatText")
 
-
-sysDatText.innerHTML = window.visualViewport.width
 
 
 const nextGalBut = document.getElementById("nextGal")
@@ -117,7 +135,7 @@ function nextGalaxy(){
     title.innerHTML = `GALACTIC CHART ${galDisp+1}`
 
     for (s = 0; s < 256; s++){
-        ctx.fillRect( sys[galDisp][s].x * 2, sys[galDisp][s].y * 2, sys[galDisp][s].pw, 1 );
+        ctx.fillRect( sys[galDisp][s].x * mC, sys[galDisp][s].y * mC, sys[galDisp][s].pw, 1 );
         }
 
 }
@@ -138,16 +156,16 @@ function clickedGalMap(){
     if (!systemSelected) return
         sysCen = sysDisp
 
-        x = sys[galDisp][sysDisp].x * 2
-        y = sys[galDisp][sysDisp].y * 2
-        xOff = 256 - x
-        yOff = 128 - y
+        x = sys[galDisp][sysDisp].x * mC
+        y = sys[galDisp][sysDisp].y * mC
+        xOff = (mW / 2) - x
+        yOff = (mH / 2) - y
 
         for (let n = 0; n < 256; n++){
-            x = sys[galDisp][n].x * 2
-            y = sys[galDisp][n].y * 2
-            x = x - 256
-            y = y - 128
+            x = sys[galDisp][n].x * mC
+            y = sys[galDisp][n].y * mC
+            x = x - (mW / mC)
+            y = y - (mH / mC)
             animx[n] = x
             animy[n] = y
         }
@@ -159,8 +177,8 @@ function clickedGalMap(){
 
         
 
-        curCenX = sys[galDisp][sysCen].x * 2
-        curCenY = sys[galDisp][sysCen].y * 2
+        curCenX = sys[galDisp][sysCen].x * mC
+        curCenY = sys[galDisp][sysCen].y * mC
 
 
 zoomIntID = setInterval(draw,10)
@@ -168,12 +186,12 @@ zoomIntID = setInterval(draw,10)
 
 function draw(){
 
-    ctx.clearRect(0, 0, 512, 256)
+    ctx.clearRect(0, 0, mW, mH)
     xshift = xOff * ((i - 1)/3)
     yshift = yOff * ((i - 1)/3)
         for (let s = 0; s < 256; s++){
-            x = sys[galDisp][s].x * 2
-            y = sys[galDisp][s].y * 2
+            x = sys[galDisp][s].x * mC
+            y = sys[galDisp][s].y * mC
             x = x + xshift
             y = y + yshift
             x = ((x - curCenX) * i) + curCenX
@@ -197,7 +215,7 @@ function draw(){
 }
 
 function shortRangeChart(){
-    ctx.clearRect(0, 0, 512, 256)
+    ctx.clearRect(0, 0, mW, mH)
     shortRange = true
     title.innerHTML = `SHORT RANGE CHART`
     nextGalBut.innerHTML = "back"
@@ -208,7 +226,7 @@ for (let s = 0; s <256; s++){
 //    if ((Math.abs(sys[galDisp][s].x - sys[galDisp][sysCen].x) < 32) & (Math.abs(sys[galDisp][s].y - sys[galDisp][sysCen].y) < 16)) 
     if ((Math.abs(xd) < 32) && (Math.abs(yd) < 16))
         {
-            ctx.fillRect(256 + (xd * 8), 128 + (yd * 8), sys[galDisp][s].pw, 1 );
+            ctx.fillRect((mW / 2) + (xd * (mC * mag)), (mH / 2) + (yd * (mC * mag)), sys[galDisp][s].pw, 1 );
            
     }
 }
@@ -223,12 +241,12 @@ function getMousePosition(canvas, event) {
     let rect = canvas.getBoundingClientRect();
     let x = event.clientX - rect.left;
     let y = event.clientY - rect.top;
-    x = x / 2
-    y = y / 2
+    x = x / mC
+    y = y / mC
 
     if (shortRange){
-        x = ((x - 128) / 4) +  (sys[galDisp][sysCen].x)
-        y = ((y - 64) / 4) +  (sys[galDisp][sysCen].y)
+        x = ((x - 128) / mag) +  (sys[galDisp][sysCen].x)
+        y = ((y - 64) / mag) +  (sys[galDisp][sysCen].y)
     }
    
 
