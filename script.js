@@ -33,6 +33,7 @@ const canvas = document.getElementById('galCanvas');
 
 mW = mapBox.getBoundingClientRect().width - 2
 
+mW = window.visualViewport.width - 10
 
 
 mH = mW / 2
