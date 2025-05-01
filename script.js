@@ -25,6 +25,8 @@ var sys = []
 var galDisp = 0
 var sysDisp
 var sysCen
+var sysNear
+
 var shortRange = false
 
 
@@ -34,7 +36,7 @@ const canvas = document.getElementById('galCanvas');
 mW = mapBox.getBoundingClientRect().width - 2
 
 mW = window.visualViewport.width - 10
-
+            
 
 mH = mW / 2
 mC = mW / 256
@@ -102,9 +104,7 @@ ctx.fillRect( sys[0][s].x * mC, sys[0][s].y * mC, sys[0][s].pw, 1 );
 
 //let canvasElem = document.getElementById("galCanvas");
 
-canvas.addEventListener("click", function() {    
-    clickedGalMap()
-}); 
+canvas.addEventListener("click", clickedGalMap, {once: true} )
 
 canvas.addEventListener("mousemove", function(f) {
     getMousePosition(canvas, f);
@@ -139,6 +139,8 @@ function nextGalaxy(){
         ctx.fillRect( sys[galDisp][s].x * mC, sys[galDisp][s].y * mC, sys[galDisp][s].pw, 1 );
         }
 
+        canvas.addEventListener("click", clickedGalMap, {once: true} )
+
 }
 
 
@@ -152,9 +154,13 @@ function clickedGalMap(){
     if (shortRange){
         galDisp --
         nextGalaxy()
+        return
     }
 
-    if (!systemSelected) return
+   // canvas.removeEventListener("click")
+
+    //if (!systemSelected) return
+        sysDisp = sysNear
         sysCen = sysDisp
 
         x = sys[galDisp][sysDisp].x * mC
@@ -231,7 +237,8 @@ for (let s = 0; s <256; s++){
            
     }
 }
-
+showSysData(sysCen)
+canvas.addEventListener("click", clickedGalMap, {once: true} )
 
 }
 
@@ -250,22 +257,28 @@ function getMousePosition(canvas, event) {
         y = ((y - 64) / mag) +  (sys[galDisp][sysCen].y)
     }
    
+    last = 500000
 
     for (s = 0; s < 256; s++){
         xdif = Math.abs(sys[galDisp][s].x - x) + (shortRange)
         ydif = Math.abs(sys[galDisp][s].y - y) + (shortRange)
         
         if (xdif < 2 && ydif < 2){
-            showSysData()
+            showSysData(s)
         }
         if (xdif == 0 && ydif == 0){
-            showSysData()
+            showSysData(s)
+        }
+
+        if ((xdif+ydif) < last){
+            sysNear = s
+            last = xdif + ydif
         }
     }
 
 }
 
-function showSysData(){
+function showSysData(s){
     sysDatTitle.innerHTML = "DATA ON SYSTEM " + sys[galDisp][s].name
     
     str1 = "Economy: " + sys[galDisp][s].eco
