@@ -29,6 +29,7 @@ var sysNear
 
 var shortRange = false
 
+const wrapper = document.getElementById("wrapper")
 
 const mapBox = document.getElementById("map")
 const canvas = document.getElementById('galCanvas');
@@ -63,8 +64,8 @@ ctx.fillStyle = "yellow ";
 const title = document.getElementById("title")
 const poiSys = document.getElementById("pointSystem")
 const sysDatScr = document.getElementById("sysDatScr")
-const sysDatTitle = document.getElementById("sysDatTitle")
-const sysDatText = document.getElementById("sysDatText")
+//const sysDatTitle = document.getElementById("sysDatTitle")
+//const sysDatText = document.getElementById("sysDatText")
 
 
 
@@ -125,6 +126,7 @@ function nextGalaxy(){
     ctx.clearRect(0, 0, mW, mH)
     sysDatTitle.innerHTML = ""
     sysDatText.innerHTML = ""
+    sysDatScr.innerHTML = ""
     nextGalBut.innerHTML = "next galaxy"
     systemSelected = false
     shortRange = false
@@ -137,7 +139,7 @@ function nextGalaxy(){
         galDisp ++
     }
 
-   title.innerHTML = `GALACTIC CHART ${galDisp+1}`
+      title.innerHTML = `GALACTIC CHART ${galDisp+1}`
  //   title.innerHTML = window.visualViewport.width
     for (s = 0; s < 256; s++){
         ctx.fillRect( sys[galDisp][s].x * mC, sys[galDisp][s].y * mC, sys[galDisp][s].pw, 1 );
@@ -283,9 +285,19 @@ function getMousePosition(canvas, event) {
 }
 
 function showSysData(s){
+
+
+
+    if (!systemSelected){
+        sysDatScr.innerHTML = '<div id="sysDatScr"><div id="top2" class="beebHead"><h1 class = "screen" id = "sysDatTitle"></h1></div><div id="bod2" class="beebText"><p id = "sysDatText"></p></div></div>'
+    }
+
+    sysDatTitle = document.getElementById("sysDatTitle")
+    sysDatText = document.getElementById("sysDatText")
+
     sysDatTitle.innerHTML = "DATA ON SYSTEM " + sys[galDisp][s].name
     
-    str1 = "Economy: " + sys[galDisp][s].eco
+    str1 = "Economy: " + ecoTypes[sys[galDisp][s].eco]
     str2 = "Government: " + govTypes[sys[galDisp][s].gov]
     str3 = "Tech.Level: " + sys[galDisp][s].tec
     str4 = "Population: " + sys[galDisp][s].pop + " Billion"

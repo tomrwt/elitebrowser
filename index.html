@@ -9,7 +9,21 @@
 
         body {background-color: rgb(0, 0, 0); color: rgb(255, 255, 255); font-family: 'Courier New', Courier, monospace }
         
+        .beebHead {
+            border: 1px white solid;
+            font-size: 8px;
+            text-align: center;
+        }
 
+        .beebText {
+            border:  1px white solid;
+            padding: 0.5em;
+            font-size: 14px;
+        }
+        .beebGraph {
+            border: 1px white solid;
+
+        }
         .wrapper {
             display: flex;
             flex-wrap: wrap;
@@ -22,17 +36,18 @@
 
 
         #top_map_but > * {
+            margin-right: 10px;
+        }
 
+        #top_man_but {
         }
 
         #top {
-            border: 1px white solid;
             text-align: center;
-            font-size: 8px;
+            
         }
 
         #map {
-            border: 1px white solid;
         }
 
         #nextGal {
@@ -46,24 +61,27 @@
 
 
         #sysDatScr > * {
-            font-size: 18px;
+         
             margin-top: 0px;
-            margin-left: 8px;
+            margin-left: 0px;
         }
 
-        p {font-size: 12px}
+        p {font-size: 14px}
         h1 {margin: 8px;}
         #pointSystem {color: red;}
-        tr   {font-size: 8px}
+        tr   {font-size: 10px}
         button {font-family: sans-serif;}
         #sysTable {color: rgb(255, 255, 255);}
         
         @media screen and (min-width: 600px) {
-        .screen {font-size: 18px};
-        h2 {font-size: 18px;} 
+        #top_map_but > * {
+            width:    
+        }
         
-       
-        p {font-size: 16px;}
+        .beebHead {font-size: 12px};
+        h2 {font-size: 12px;} 
+        
+        p {font-size: 18px;}
         }
 
       
@@ -77,12 +95,12 @@
 
 <div id="top_map_but">
    
-    <div id="top">
+    <div id="top" class="beebHead">
         <h1 class="screen" id="title">GALACTIC CHART 1</h1> 
     </div>
   
-    <div id="map">
-    <canvas id="galCanvas" width="512" height="256" ></canvas>
+    <div id="map" class="beebGraph">
+    <canvas id="galCanvas"></canvas>
     </div>
 
     <div id="but">
@@ -91,8 +109,8 @@
 </div>
 
 <div id="sysDatScr">
-        <h2 id = "sysDatTitle"></h2>
-        <p id = "sysDatText"></p>
+
+
 </div>
 
 </div>
