@@ -33,9 +33,9 @@ var shortRange = false
 const mapBox = document.getElementById("map")
 const canvas = document.getElementById('galCanvas');
 
-mW = mapBox.getBoundingClientRect().width - 2
+//mW = mapBox.getBoundingClientRect().width -2
 
-mW = window.visualViewport.width - 10
+mW = window.visualViewport.width - 20
             
 
 mH = mW / 2
