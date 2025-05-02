@@ -36,7 +36,11 @@ const canvas = document.getElementById('galCanvas');
 //mW = mapBox.getBoundingClientRect().width -2
 
 mW = window.visualViewport.width - 20
-            
+mH = window.visualViewport.height - 20
+
+if (mW > 1000){
+    mW = mW /2
+}
 
 mH = mW / 2
 mC = mW / 256
@@ -133,8 +137,8 @@ function nextGalaxy(){
         galDisp ++
     }
 
-    title.innerHTML = `GALACTIC CHART ${galDisp+1}`
-
+ //   title.innerHTML = `GALACTIC CHART ${galDisp+1}`
+    title.innerHTML = window.visualViewport.width
     for (s = 0; s < 256; s++){
         ctx.fillRect( sys[galDisp][s].x * mC, sys[galDisp][s].y * mC, sys[galDisp][s].pw, 1 );
         }
