@@ -6,122 +6,131 @@
     <title>Galactic Chart</title>
 
     <style>
+        /* ====================================================================
+           CSS VARIABLES (Custom Properties)
+           Define the core beeb theme
+           ==================================================================== */
+        :root {
+            --beeb-bg: #000000;
+            --beeb-fg: #ffffff;
+            --beeb-accent: #ff0000;
+            --beeb-font-mono: 'Courier New', Courier, monospace;
+            --beeb-font-sans: sans-serif;
+            --border-standard: 1px solid var(--beeb-fg);
+        }
 
-        body {background-color: rgb(0, 0, 0); color: rgb(255, 255, 255); font-family: 'Courier New', Courier, monospace }
-        
+        /* ====================================================================
+           GLOBAL RESET & TYPOGRAPHY
+           ==================================================================== */
+        body {
+            background-color: var(--beeb-bg);
+            color: var(--beeb-fg);
+            font-family: var(--beeb-font-mono);
+            margin: 8px; /* Default browser margin, explicitly defined for clarity */
+        }
+
+        h1 {
+            margin: 8px;
+        }
+
+        p {
+            font-size: 14px;
+        }
+
+        button {
+            font-family: var(--beeb-font-sans);
+            cursor: pointer;
+        }
+
+        tr {
+            font-size: 10px;
+        }
+
+        /* ====================================================================
+           LAYOUT CONTAINERS
+           ==================================================================== */
+        .wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px; /* Modern way to space flex items instead of margin-right */
+        }
+
+        .map-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: flex-end; /* Modern flexbox alignment */
+        }
+
+        /* ====================================================================
+           BEEB UI COMPONENTS
+           ==================================================================== */
         .beebHead {
-            border: 1px white solid;
+            border: var(--border-standard);
             font-size: 8px;
             text-align: center;
         }
 
         .beebText {
-            border:  1px white solid;
+            border: var(--border-standard);
             padding: 0.5em;
             font-size: 14px;
         }
+
         .beebGraph {
-            border: 1px white solid;
-
-        }
-        .wrapper {
-            display: flex;
-            flex-wrap: wrap;
-
+            border: var(--border-standard);
         }
 
-        .wrapper > * {
-            
-        }
+        /* Legacy IDs (kept in case future JS updates require them) */
+        #pointSystem { color: var(--beeb-accent); }
+        #sysTable { color: var(--beeb-fg); }
+        #sysDatScr { margin: 0; }
 
-
-        #top_map_but > * {
-            margin-right: 10px;
-        }
-
-        #top_man_but {
-        }
-
-        #top {
-            text-align: center;
-            
-        }
-
-        #map {
-        }
-
-        #nextGal {
-            align-content:last baseline;
-         }
-
-         #but {
-            justify-content: right;
-            display: flex;
-         }
-
-
-        #sysDatScr > * {
-         
-            margin-top: 0px;
-            margin-left: 0px;
-        }
-
-        p {font-size: 14px}
-        h1 {margin: 8px;}
-        #pointSystem {color: red;}
-        tr   {font-size: 10px}
-        button {font-family: sans-serif;}
-        #sysTable {color: rgb(255, 255, 255);}
-        
+        /* ====================================================================
+           RESPONSIVE DESIGN
+           ==================================================================== */
         @media screen and (min-width: 600px) {
-        #top_map_but > * {
-            width:    
+            .beebHead { font-size: 12px; }
+            h2 { font-size: 12px; }
+            p { font-size: 18px; }
         }
-        
-        .beebHead {font-size: 12px};
-        h2 {font-size: 12px;} 
-        
-        p {font-size: 18px;}
-        }
-
-      
-
-        </style>
-
+    </style>
 </head> 
 <body>
     
-<div class="wrapper">
+    <div class="wrapper" id="wrapper">
 
-<div id="top_map_but">
-   
-    <div id="top" class="beebHead">
-        <h1 class="screen" id="title">GALACTIC CHART 1</h1> 
+        <!-- Using <section> instead of a <div> for better document structure -->
+        <section class="map-section">
+           
+            <!-- <header> is the semantic tag for a title block -->
+            <header id="top" class="beebHead">
+                <h1 class="screen" id="title">GALACTIC CHART 1</h1> 
+            </header>
+          
+            <!-- <figure> is the semantic tag for diagrams, charts, and illustrations -->
+            <figure id="map" class="beebGraph" style="margin: 0;">
+                <canvas id="galCanvas"></canvas>
+            </figure>
+
+            <!-- <nav> is the semantic tag for navigation controls -->
+            <nav class="button-container" id="but">
+                <button id="nextGal" type="button">next galaxy</button>
+            </nav>
+
+        </section>
+
+        <!-- The data screen container targeted by JavaScript -->
+        <section id="sysDatScr"></section>
+
     </div>
-  
-    <div id="map" class="beebGraph">
-    <canvas id="galCanvas"></canvas>
-    </div>
 
-    <div id="but">
-    <button id="nextGal" type="button">next galaxy</button>
-    </div>
-</div>
-
-<div id="sysDatScr">
-
-
-</div>
-
-</div>
+    <!-- Scripts belong at the absolute bottom of the body tag -->
+    <script src="script.js"></script>
 
 </body>
-
-<script src="script.js"></script>
-
-
-
-
-
-
 </html>
