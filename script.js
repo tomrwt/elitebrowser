@@ -1,482 +1,399 @@
- // initial seeds
-const rootSeed = [0x5A4A,0x0248,0xB753]
+"use strict"; // Enforces safer JavaScript (e.g., prevents implicit globals)
 
-s0 = rootSeed[0]
-s1 = rootSeed[1]
-s2 = rootSeed[2]
+// ============================================================================
+// CONSTANTS & LOOKUP TABLES
+// ============================================================================
+const BASE_SEEDS = { s0: 0x5A4A, s1: 0x0248, s2: 0xB753 };
+const SYSTEMS_PER_GALAXY = 256;
+const NUM_GALAXIES = 8;
+const ZOOM_MAX_MAGNIFICATION = 4;
 
-const twoCharTokens = ["AL","LE","XE","GE","ZA","CE","BI","SO","US","ES","AR","MA","IN","DI","RE","A","ER","AT","EN","BE","RA","LA","VE","TI","ED","OR","QU","AN","TE","IS","RI","ON"]
-const govTypes = ["Anarchy","Feudal","Multi-government","Dicatorship","Communist","Confederacy","Democracy","Corporate State"]
-const ecoTypes = ["Rich Industrial", "Average Industrial", "Poor Industrial", "Mainly Industrial", "Mainly Agricultural", "Rich Agricultural", "Average Agricultural", "Poor Agricultural"]
-const speTypes = [["Large ", "Fierce ", "Small "], ["Green ", "Red ", "Yellow ", "Blue ", "Black ", "Harmless "], ["Slimy ", "Bug-Eyed ", "Horned ", "Bony ", "Fat ", "Furry "], ["Rodents", "Frogs", "Lizards", "Lobsters", "Birds", "Humanoids", "Felines", "Insects"]]
+const NAME_TOKENS = ["AL","LE","XE","GE","ZA","CE","BI","SO","US","ES","AR","MA","IN","DI","RE","A","ER","AT","EN","BE","RA","LA","VE","TI","ED","OR","QU","AN","TE","IS","RI","ON"];
+const GOVERNMENTS = ["Anarchy","Feudal","Multi-government","Dictatorship","Communist","Confederacy","Democracy","Corporate State"];
+const ECONOMIES = ["Rich Industrial", "Average Industrial", "Poor Industrial", "Mainly Industrial", "Mainly Agricultural", "Rich Agricultural", "Average Agricultural", "Poor Agricultural"];
+const SPECIES_ADJECTIVES = [
+    ["Large ", "Fierce ", "Small "],
+    ["Green ", "Red ", "Yellow ", "Blue ", "Black ", "Harmless "],
+    ["Slimy ", "Bug-Eyed ", "Horned ", "Bony ", "Fat ", "Furry "],
+    ["Rodents", "Frogs", "Lizards", "Lobsters", "Birds", "Humanoids", "Felines", "Insects"]
+];
 
-// allow higher dimensional arrays
-//makeArray = (n, cb) =>
-//    [...Array(n).keys()]
-//    .map(i => cb ? cb(i) : i)
-//  makeMatrix = ([head, ...tail], cb, pos) =>
-//    head ? makeArray(head, i => makeMatrix(
-//     tail, cb, [...(pos || []), i]
-//    )) : cb ? cb(pos) : 0
+// ============================================================================
+// APPLICATION STATE
+// ============================================================================
+const state = {
+    galaxies: [],             // Holds all 8 galaxies and their systems
+    currentGalaxyIndex: 0,    // Which galaxy map is currently active
+    targetSystemIndex: null,  // The system clicked on for zoom
+    hoveredSystemIndex: null, // The system nearest to the mouse pointer
+    displayedSystemIndex: null, // The system currently shown in the data panel
+    isSystemSelected: false,  // Whether the data panel has been initialized
+    isShortRange: false,      // Whether we are viewing the zoomed-in map
+    zoomIntervalId: null      // Reference to the active animation loop
+};
 
+// ============================================================================
+// UI & CANVAS SETUP
+// ============================================================================
+const UI = {
+    wrapper: document.getElementById("wrapper"),
+    mapBox: document.getElementById("map"),
+    canvas: document.getElementById('galCanvas'),
+    ctx: document.getElementById('galCanvas').getContext('2d'),
+    title: document.getElementById("title"),
+    sysDatScr: document.getElementById("sysDatScr"),
+    nextGalBut: document.getElementById("nextGal")
+};
 
-var sys = []
+// Calculate canvas dimensions dynamically based on viewport
+let canvasWidth = window.visualViewport.width - 20;
+let canvasHeight = window.visualViewport.height - 20;
 
-var galDisp = 0
-var sysDisp
-var sysCen
-var sysNear
-
-var shortRange = false
-
-const wrapper = document.getElementById("wrapper")
-
-const mapBox = document.getElementById("map")
-const canvas = document.getElementById('galCanvas');
-
-//mW = mapBox.getBoundingClientRect().width -2
-
-mW = window.visualViewport.width - 20
-mH = window.visualViewport.height - 20
-
-if ((mW / mH) > 1.5){
-    mW = mW / 2
+if ((canvasWidth / canvasHeight) > 1.5) {
+    canvasWidth = canvasWidth / 2;
 }
 
-mH = mW / 2
-mC = mW / 256
+canvasHeight = canvasWidth / 2;
+const scaleFactor = canvasWidth / 256;
 
-canvas.width = mW
-canvas.height = mH
+UI.canvas.width = canvasWidth;
+UI.canvas.height = canvasHeight;
+UI.ctx.fillStyle = "yellow";
 
+// ============================================================================
+// BITWISE MATH HELPERS
+// ============================================================================
+const getHighByte = (n) => (n & 0xFF00) >> 8;
+const getLowByte = (n) => n & 0x00FF;
+const wrap16Bit = (n) => n & 0xFFFF;
+const rotate16BitLeft = (n) => wrap16Bit((n << 1) | (n >>> 15));
+const rotate8BitLeft = (n) => ((n << 1) | (n >>> 7)) & 0xFF;
 
+// ============================================================================
+// PROCEDURAL GENERATION ENGINE
+// ============================================================================
 
-const ctx = canvas.getContext('2d');
-ctx.fillStyle = "yellow ";
-
-
-//ctx.canvas.width = mapBox.getBoundingClientRect().width - 2
-//ctx.canvas.height = ctx.canvas.width / 2
-
-
-
-
-const title = document.getElementById("title")
-const poiSys = document.getElementById("pointSystem")
-const sysDatScr = document.getElementById("sysDatScr")
-//const sysDatTitle = document.getElementById("sysDatTitle")
-//const sysDatText = document.getElementById("sysDatText")
-
-
-
-const nextGalBut = document.getElementById("nextGal")
-
-
-
-
-systemSelected = false
-for (g = 0; g < 8; g++){
-
-    g0 = s0
-    g1 = s1
-    g2 = s2 
-
-    sys[g] = []
-                                              
-
-    for (s = 0; s < 256; s++){
-
- 
-        sys[g][s] = sysDat(s0,s1,s2)
-
-
-
-        twist()
-        twist()
-        twist()
-        twist()
-    }
-
-    s0 = (rot8(hi(g0)) << 8) + rot8(lo(g0))
-    s1 = (rot8(hi(g1)) << 8) + rot8(lo(g1))
-    s2 = (rot8(hi(g2)) << 8) + rot8(lo(g2))
-}   
-
-galDisp = 0
-for (s = 0; s < 256; s++){
-ctx.fillRect( sys[0][s].x * mC, sys[0][s].y * mC, sys[0][s].pw, 1 );
+/**
+ * Mutates a seed object to advance the procedural generation sequence.
+ */
+function twistSeeds(seeds) {
+    const tmp = wrap16Bit(seeds.s0 + seeds.s1);
+    seeds.s0 = seeds.s1;
+    seeds.s1 = seeds.s2;
+    seeds.s2 = wrap16Bit(tmp + seeds.s1);
 }
 
-//let canvasElem = document.getElementById("galCanvas");
+/**
+ * Generates the name of a system. 
+ * Note: Takes a cloned seed object so it doesn't affect the main galaxy sequence.
+ */
+function generateSystemName(localSeeds) {
+    let sysName = "";
+    // Bit 6 of s0 dictates whether the name has 3 or 4 token pairs
+    const isLongName = (localSeeds.s0 & 0b01000000) > 0;
+    const pairs = isLongName ? 4 : 3;
 
-canvas.addEventListener("click", clickedGalMap, {once: true} )
-
-canvas.addEventListener("mousemove", function(f) {
-    getMousePosition(canvas, f);
-});
-
-nextGalBut.addEventListener("click", function(){
-    if (shortRange) {galDisp --}
-    nextGalaxy()
-
-})
-
-function nextGalaxy(){
-
-    ctx.clearRect(0, 0, mW, mH)
-    sysDatTitle.innerHTML = ""
-    sysDatText.innerHTML = ""
-    sysDatScr.innerHTML = ""
-    nextGalBut.innerHTML = "next galaxy"
-    systemSelected = false
-    shortRange = false
-
-
-
-    if (galDisp == 7){
-        galDisp = 0
-    }else{
-        galDisp ++
+    for (let n = 0; n < pairs; n++) {
+        const tokenIndex = (localSeeds.s2 & 0x1F00) >> 8; // Bits 8-12
+        if (tokenIndex > 0) {
+            sysName += NAME_TOKENS[tokenIndex];
+        }
+        twistSeeds(localSeeds);
     }
 
-      title.innerHTML = `GALACTIC CHART ${galDisp+1}`
- //   title.innerHTML = window.visualViewport.width
-    for (s = 0; s < 256; s++){
-        ctx.fillRect( sys[galDisp][s].x * mC, sys[galDisp][s].y * mC, sys[galDisp][s].pw, 1 );
+    return sysName;
+}
+
+/**
+ * Generates all stats, coordinates, and properties for a single system.
+ */
+function generateSystemData(seeds) {
+    // Clone seeds for the name generator so it doesn't break the main procedural loop
+    const name = generateSystemName({ ...seeds });
+
+    const s0_hi = getHighByte(seeds.s0);
+    const s0_lo = getLowByte(seeds.s0);
+    const s1_hi = getHighByte(seeds.s1);
+    const s1_lo = getLowByte(seeds.s1);
+    const s2_hi = getHighByte(seeds.s2);
+    const s2_lo = getLowByte(seeds.s2);
+
+    const government = (s1_lo & 0b00111000) >> 3;
+    let economy = s0_hi & 0b111;
+
+    // Anarchy or Feudal governments can't be rich
+    if (government < 2) {
+        economy = economy | 0b010;
+    }
+
+    const flipEcon = economy ^ 0b111;
+    const techLevel = flipEcon + (s1_hi & 0b11) + Math.round(government / 2);
+    const population = (techLevel * 4) + economy + government + 1;
+
+    let species = "";
+    const isHuman = (s2_lo & 0b10000000) === 0;
+
+    if (isHuman) {
+        species = "Human Colonials";
+    } else {
+        const adj1 = (s2_hi & 0b11100) >> 2;
+        if (adj1 < 3) species += SPECIES_ADJECTIVES[0][adj1];
+
+        const adj2 = (s2_hi & 0b11100000) >> 5;
+        if (adj2 < 6) species += SPECIES_ADJECTIVES[1][adj2];
+
+        const adj3 = (s0_hi ^ s1_hi) & 0b111;
+        if (adj3 < 6) species += SPECIES_ADJECTIVES[2][adj3];
+
+        const animalIndex = (adj3 + (s2_hi & 0b11)) & 0b111;
+        species += SPECIES_ADJECTIVES[3][animalIndex];
+    }
+
+    const productivity = (flipEcon + 3) * (government + 4) * population * 8;
+    const radius = ((s2_hi & 0b1111) + 11) * 256 + s1_hi;
+
+    const x = s1_hi;
+    const y = s0_hi >> 1; // Galactic chart is half-height
+    
+    const zz = s2_lo | 0b01010000;
+    const pixelWidth = (zz > 143) ? 1 : 2;
+
+    const carryFlag = seeds.s0 & 0b00000001;
+    const starSize = (s2_lo & 0b00000001) + 2 + carryFlag;
+
+    return {
+        name,
+        economy,
+        government,
+        techLevel: techLevel + 1,
+        population: population / 10,
+        species,
+        productivity,
+        radius,
+        x,
+        y,
+        pixelWidth,
+        starSize
+    };
+}
+
+/**
+ * Initializes the entire universe (8 galaxies, 256 systems each) upon load.
+ */
+function initializeUniverse() {
+    let currentSeeds = { ...BASE_SEEDS };
+
+    for (let g = 0; g < NUM_GALAXIES; g++) {
+        const baseSeeds = { ...currentSeeds };
+        const currentGalaxySystems = [];
+
+        for (let s = 0; s < SYSTEMS_PER_GALAXY; s++) {
+            currentGalaxySystems.push(generateSystemData(currentSeeds));
+            
+            // The Elite algorithm twists the seeds 4 times between each system
+            twistSeeds(currentSeeds);
+            twistSeeds(currentSeeds);
+            twistSeeds(currentSeeds);
+            twistSeeds(currentSeeds);
         }
 
-        canvas.addEventListener("click", clickedGalMap, {once: true} )
+        state.galaxies.push(currentGalaxySystems);
 
+        // Calculate the base seeds for the next galaxy
+        currentSeeds.s0 = (rotate8BitLeft(getHighByte(baseSeeds.s0)) << 8) + rotate8BitLeft(getLowByte(baseSeeds.s0));
+        currentSeeds.s1 = (rotate8BitLeft(getHighByte(baseSeeds.s1)) << 8) + rotate8BitLeft(getLowByte(baseSeeds.s1));
+        currentSeeds.s2 = (rotate8BitLeft(getHighByte(baseSeeds.s2)) << 8) + rotate8BitLeft(getLowByte(baseSeeds.s2));
+    }
 }
 
+// ============================================================================
+// RENDERING & ANIMATION
+// ============================================================================
 
-function clickedGalMap(){
+function renderGalaxyMap() {
+    UI.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    UI.ctx.fillStyle = "yellow";
+    
+    const currentGalaxy = state.galaxies[state.currentGalaxyIndex];
+    
+    for (let s = 0; s < SYSTEMS_PER_GALAXY; s++) {
+        const sys = currentGalaxy[s];
+        UI.ctx.fillRect(sys.x * scaleFactor, sys.y * scaleFactor, sys.pixelWidth, 1);
+    }
+}
 
-    let animx = []
-    let animy = []
-    let xOff = 0
-    let yOff = 0
+function renderShortRangeChart() {
+    UI.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    UI.ctx.fillStyle = "yellow";
+    state.isShortRange = true;
+    
+    UI.title.innerHTML = "SHORT RANGE CHART";
+    UI.nextGalBut.innerHTML = "back";
 
-    if (shortRange){
-        galDisp --
-        nextGalaxy()
-        return
+    const sysCenter = state.galaxies[state.currentGalaxyIndex][state.targetSystemIndex];
+
+    for (let s = 0; s < SYSTEMS_PER_GALAXY; s++) {
+        const sys = state.galaxies[state.currentGalaxyIndex][s];
+        const xDiff = sys.x - sysCenter.x;
+        const yDiff = sys.y - sysCenter.y;
+
+        // Render systems within a specific coordinate distance
+        if (Math.abs(xDiff) < 32 && Math.abs(yDiff) < 16) {
+            const plotX = (canvasWidth / 2) + (xDiff * (scaleFactor * ZOOM_MAX_MAGNIFICATION));
+            const plotY = (canvasHeight / 2) + (yDiff * (scaleFactor * ZOOM_MAX_MAGNIFICATION));
+            UI.ctx.fillRect(plotX, plotY, sys.pixelWidth, 1);
+        }
     }
 
-   // canvas.removeEventListener("click")
+    displaySystemData(state.targetSystemIndex);
+    UI.canvas.addEventListener("click", handleMapClick, { once: true });
+}
 
-    //if (!systemSelected) return
-        sysDisp = sysNear
-        sysCen = sysDisp
+function handleMapClick() {
+    // If we're already zoomed in, clicking the map returns us to the galaxy view
+    if (state.isShortRange) {
+        showNextGalaxy(true);
+        return;
+    }
 
-        x = sys[galDisp][sysDisp].x * mC
-        y = sys[galDisp][sysDisp].y * mC
-        xOff = (mW / 2) - x
-        yOff = (mH / 2) - y
+    state.targetSystemIndex = state.hoveredSystemIndex;
+    const sysCenter = state.galaxies[state.currentGalaxyIndex][state.targetSystemIndex];
 
-        for (let n = 0; n < 256; n++){
-            x = sys[galDisp][n].x * mC
-            y = sys[galDisp][n].y * mC
-            x = x - (mW / mC)
-            y = y - (mH / mC)
-            animx[n] = x
-            animy[n] = y
-        }
+    const xOffset = (canvasWidth / 2) - (sysCenter.x * scaleFactor);
+    const yOffset = (canvasHeight / 2) - (sysCenter.y * scaleFactor);
+
+    let progress = 1;
+    const step = 0.05;
+    
+    let currentCenterX = sysCenter.x * scaleFactor;
+    let currentCenterY = sysCenter.y * scaleFactor;
+
+    state.zoomIntervalId = setInterval(() => {
+        UI.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        UI.ctx.fillStyle = "yellow";
         
+        const xShift = xOffset * ((progress - 1) / 3);
+        const yShift = yOffset * ((progress - 1) / 3);
 
-        i = 1
-        step = 0.05
-        mag = 4
+        for (let s = 0; s < SYSTEMS_PER_GALAXY; s++) {
+            const sys = state.galaxies[state.currentGalaxyIndex][s];
+            
+            let x = (sys.x * scaleFactor) + xShift;
+            let y = (sys.y * scaleFactor) + yShift;
+            
+            x = ((x - currentCenterX) * progress) + currentCenterX;
+            y = ((y - currentCenterY) * progress) + currentCenterY;
+            
+            if (s === state.targetSystemIndex) {
+                currentCenterX = x;
+                currentCenterY = y;
+            }
+            
+            UI.ctx.fillRect(x, y, sys.pixelWidth, 1);
+        }
 
+        progress += step;
         
+        if (progress > ZOOM_MAX_MAGNIFICATION) {
+            clearInterval(state.zoomIntervalId);
+            renderShortRangeChart();
+        }
+    }, 10);
+}
 
-        curCenX = sys[galDisp][sysCen].x * mC
-        curCenY = sys[galDisp][sysCen].y * mC
+// ============================================================================
+// UI & EVENT HANDLERS
+// ============================================================================
 
-
-zoomIntID = setInterval(draw,10)
-
-
-function draw(){
-
-    ctx.clearRect(0, 0, mW, mH)
-    xshift = xOff * ((i - 1)/3)
-    yshift = yOff * ((i - 1)/3)
-        for (let s = 0; s < 256; s++){
-            x = sys[galDisp][s].x * mC
-            y = sys[galDisp][s].y * mC
-            x = x + xshift
-            y = y + yshift
-            x = ((x - curCenX) * i) + curCenX
-            y = ((y - curCenY) * i) + curCenY
-            if (s==sysCen){
-                curCenX = x
-                curCenY = y
-                }
-            ctx.fillRect(x,y, sys[galDisp][s].pw, 1)
-                }                                            
-    i = i + step  
-    if (i > mag){
-        clearInterval(zoomIntID)
-     
-        shortRangeChart()
+function displaySystemData(systemIndex) {
+    if (!state.isSystemSelected) {
+        // Initialize the DOM structure once
+        UI.sysDatScr.innerHTML = `
+            <div id="sysDataContainer">
+                <div id="top2" class="beebHead"><h1 class="screen" id="sysDatTitle"></h1></div>
+                <div id="bod2" class="beebText"><div id="sysDatText"></div></div>
+            </div>`;
+        state.isSystemSelected = true;
     }
+
+    const titleEl = document.getElementById("sysDatTitle");
+    const textEl = document.getElementById("sysDatText");
+    const sys = state.galaxies[state.currentGalaxyIndex][systemIndex];
+
+    titleEl.innerHTML = `DATA ON SYSTEM ${sys.name}`;
+
+    // Template literals make building HTML dramatically easier to read
+    textEl.innerHTML = `
+        <p>Economy: ${ECONOMIES[sys.economy]}</p>
+        <p>Government: ${GOVERNMENTS[sys.government]}</p>
+        <p>Tech Level: ${sys.techLevel}</p>
+        <p>Population: ${sys.population.toFixed(1)} Billion</p>
+        <p>(${sys.species})</p>
+        <p>Gross Productivity: ${sys.productivity} M Cr</p>
+        <p>Average Radius: ${sys.radius} km</p>
+    `;
+    
+    state.displayedSystemIndex = systemIndex;
 }
 
+function handleMouseMove(event) {
+    const rect = UI.canvas.getBoundingClientRect();
+    let mouseX = (event.clientX - rect.left) / scaleFactor;
+    let mouseY = (event.clientY - rect.top) / scaleFactor;
 
-
-}
-
-function shortRangeChart(){
-    ctx.clearRect(0, 0, mW, mH)
-    shortRange = true
-    title.innerHTML = `SHORT RANGE CHART`
-    nextGalBut.innerHTML = "back"
-
-for (let s = 0; s <256; s++){
-    xd = sys[galDisp][s].x - sys[galDisp][sysCen].x
-    yd = sys[galDisp][s].y - sys[galDisp][sysCen].y
-//    if ((Math.abs(sys[galDisp][s].x - sys[galDisp][sysCen].x) < 32) & (Math.abs(sys[galDisp][s].y - sys[galDisp][sysCen].y) < 16)) 
-    if ((Math.abs(xd) < 32) && (Math.abs(yd) < 16))
-        {
-            ctx.fillRect((mW / 2) + (xd * (mC * mag)), (mH / 2) + (yd * (mC * mag)), sys[galDisp][s].pw, 1 );
-           
+    if (state.isShortRange) {
+        const sysCenter = state.galaxies[state.currentGalaxyIndex][state.targetSystemIndex];
+        mouseX = ((mouseX - 128) / ZOOM_MAX_MAGNIFICATION) + sysCenter.x;
+        mouseY = ((mouseY - 64) / ZOOM_MAX_MAGNIFICATION) + sysCenter.y;
     }
-}
-showSysData(sysCen)
-canvas.addEventListener("click", clickedGalMap, {once: true} )
 
-}
+    let closestDistance = Infinity;
 
-
-
-
-function getMousePosition(canvas, event) {
-    let rect = canvas.getBoundingClientRect();
-    let x = event.clientX - rect.left;
-    let y = event.clientY - rect.top;
-    x = x / mC
-    y = y / mC
-
-    if (shortRange){
-        x = ((x - 128) / mag) +  (sys[galDisp][sysCen].x)
-        y = ((y - 64) / mag) +  (sys[galDisp][sysCen].y)
-    }
-   
-    last = 500000
-
-    for (s = 0; s < 256; s++){
-        xdif = Math.abs(sys[galDisp][s].x - x) + (shortRange)
-        ydif = Math.abs(sys[galDisp][s].y - y) + (shortRange)
+    for (let s = 0; s < SYSTEMS_PER_GALAXY; s++) {
+        const sys = state.galaxies[state.currentGalaxyIndex][s];
         
-        if (xdif < 2 && ydif < 2){
-            showSysData(s)
-        }
-        if (xdif == 0 && ydif == 0){
-            showSysData(s)
+        // In JS, adding a boolean (isShortRange) to a number coerces it to 1 or 0. 
+        // This cleverly inflates the hit-box slightly when zoomed in.
+        const xDiff = Math.abs(sys.x - mouseX) + (state.isShortRange ? 1 : 0);
+        const yDiff = Math.abs(sys.y - mouseY) + (state.isShortRange ? 1 : 0);
+
+        if (xDiff < 2 && yDiff < 2) {
+            displaySystemData(s);
         }
 
-        if ((xdif+ydif) < last){
-            sysNear = s
-            last = xdif + ydif
+        if ((xDiff + yDiff) < closestDistance) {
+            state.hoveredSystemIndex = s;
+            closestDistance = xDiff + yDiff;
         }
     }
-
 }
 
-function showSysData(s){
-
-
-
-    if (!systemSelected){
-        sysDatScr.innerHTML = '<div id="sysDatScr"><div id="top2" class="beebHead"><h1 class = "screen" id = "sysDatTitle"></h1></div><div id="bod2" class="beebText"><p id = "sysDatText"></p></div></div>'
-    }
-
-    sysDatTitle = document.getElementById("sysDatTitle")
-    sysDatText = document.getElementById("sysDatText")
-
-    sysDatTitle.innerHTML = "DATA ON SYSTEM " + sys[galDisp][s].name
+function showNextGalaxy(stayOnCurrentGalaxy = false) {
+    UI.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    UI.sysDatScr.innerHTML = "";
+    UI.nextGalBut.innerHTML = "next galaxy";
     
-    str1 = "Economy: " + ecoTypes[sys[galDisp][s].eco]
-    str2 = "Government: " + govTypes[sys[galDisp][s].gov]
-    str3 = "Tech.Level: " + sys[galDisp][s].tec
-    str4 = "Population: " + sys[galDisp][s].pop + " Billion"
-    str5 = "(" + sys[galDisp][s].spe + ")"
-    str6 = "Gross Productivity: " + sys[galDisp][s].pro + " M Cr"
-    str7 = "Average Radius: " + sys[galDisp][s].rad + " km"
+    state.isSystemSelected = false;
+    state.isShortRange = false;
 
-    sysDatText.innerHTML = `<p>${str1}</p><p>${str2}</p><p>${str3}</p><p>${str4}</p><p>${str5}</p><p>${str6}</p><p>${str7}</p>` 
-    systemSelected = true
-    sysDisp = s
-}
+    if (!stayOnCurrentGalaxy) {
+        // Cycle from 0-7, looping back to 0
+        state.currentGalaxyIndex = (state.currentGalaxyIndex === 7) ? 0 : state.currentGalaxyIndex + 1;
+    }
 
-function twist(){
-    tmp = s0 + s1
-    tmp = wrap_16(tmp)
-    s0 = s1
-    s1 = s2
-    s2 = tmp + s1
-    s2 = wrap_16(s2)
-}
-
-
-
-function genSysName(s0,s1,s2){
- 
-    sysName = ""
-  
-    bit = s0 & 0b01000000  //get the 6th bit of s0 to decide if we do 4 or 3 text token loops
+    UI.title.innerHTML = `GALACTIC CHART ${state.currentGalaxyIndex + 1}`;
     
-    if (bit > 0) {
-        pairs = 4
-    }
-    else{
-        pairs = 3
-    }  
- 
-    for (let n = 0; n < pairs; n++){    // token loop
-        bits = (s2 & 0b0001111100000000) >> 8   // get bits 8-12 of s2, i.e. 0-4 of s2_hi  
-        if (bits>0){    // if those bits are non-zero then lookup up a text token to add to system name
-            nextTwoChars = twoCharTokens[bits]
-            sysName=sysName.concat(nextTwoChars)
-        }else{
-        }
-    
-    // Twist seeds keeping them wrapped to 16 bits
-    tmp = s0 + s1
-    tmp = wrap_16(tmp)
-    s0 = s1
-    s1 = s2
-    s2 = tmp + s1
-    s2 = wrap_16(s2)
-
-    }
-    
-    return sysName
-}   
-
-
-
-
-function sysCoord(s0,s1,s2){
-    x = hi(s1)
-    y = hi(s0) >> 1 // galactic chart half height
-    zz = lo(s2) | 0b01010000
-    if (zz > 143){
-        pw = 1
-    }else{
-        pw = 2
-    }
-    // in Elite C appears to be carry flag returned by cpl routine; I've just used the LSB of s0...
-    c = s0 & 0b00000001 
-    ss = (lo(s2) & 0b00000001) + 2 + c
-    return Array(x,y,pw,ss)
+    renderGalaxyMap();
+    UI.canvas.addEventListener("click", handleMapClick, { once: true });
 }
 
+// ============================================================================
+// BOOTSTRAP
+// ============================================================================
 
-// return Data on System from seeds AS AN OBJECT
-function sysDat(s0,s1,s2){
-    
-    s0_hi = hi(s0)          // split 16 bit seeds into high and low bytes
-    s0_lo = lo(s0)
-    s1_hi = hi(s1)
-    s1_lo = lo(s1)
-    s2_hi = hi(s2)
-    s2_lo = lo(s2)
+initializeUniverse();
+renderGalaxyMap();
 
-    go = (s1_lo & 0b00111000) >> 3  // gov is 3 bits
-
-    ec = s0_hi & 0b111      // Economy is 3 bits
-    if (go < 2){            // If government is anarchy or feudal then
-        ec = ec | 0b010     // set bit 1 of economy so it can't be rich
-    }
-
-    flipEcon = ec ^ 0b111   // flip all 3 bits of economy, used in tech & productivity calculations
-
-    // Tech level = flipped_economy + (s1_hi AND %11) + (government / 2)
-    // On 6502 division is done using LSR and the addition uses ADC, 
-    // so we round up the division for odd-numbered government types
-    te = flipEcon + (s1_hi & 0b11) + Math.round(go / 2)
-    // internal variable 0-14 on 6502 incremented by TT25 routine to display as 1-15
-
-    po = (te * 4) + ec + go + 1     // population = (tech level * 4) + economy + government + 1
-
-    // Build species descr          iption string:
-    huBit = (s2_lo & 0b10000000)    // if bit 7 of s2_lo is clear then human
-       if (huBit == 0){
-        sp = "Human Colonials"
-    }else{                          // otherwise alien preceded by 0-3 adjectives
-        sp = ""
-        a = (s2_hi & 0b11100) >> 2          // Set a = bits 2-4 of s2_hi
-        if (a < 3){
-            sp = sp.concat(speTypes[0][a])  // add adjective if 0-2
-        }
-        a = (s2_hi & 0b11100000) >> 5       // Set a = bits 5-7 of s2_hi
-        if (a < 6 ){
-            sp = sp.concat(speTypes[1][a])  // add adjective if 0-5
-        }
-        a = (s0_hi ^ hi(s1)) & 0b111        // Set a = bits 0-2 of (s0_hi EOR s1_hi)
-        if (a < 6 ){
-            sp = sp.concat(speTypes[2][a])  // add adjective if 0-5   
-        }
-        a = a + (s2_hi & 0b11)              // add bits 0-1 of s2_hi to a from last step 
-        a = a & 0b111                       // and take bits 0-2 of the result
-        sp = sp.concat(speTypes[3][a])      // add species
-    }
-
-    // Gross productivity =
-    // (flipped_economy + 3) * (government + 4) * population * 8
-    pr = (flipEcon + 3) * (go + 4) * po * 8
-
-    // Average radius =
-    // ((s2_hi AND %1111) + 11) * 256 + s1_hi               
-    ra = ((s2_hi & 0b1111) + 11) * 256 + s1_hi
-
-    // Coordinates
-    x = s1_hi
-    y = s0_hi >> 1     // galactic chart is half height
-    zz = s2_lo | 0b01010000
-    if (zz > 143){      // pixel width
-        pw = 1
-    }else{
-        pw = 2
-    }
-    // in Elite C appears to be carry flag returned by cpl routine; I've just used the LSB of s0...
-    c = s0 & 0b00000001 
-    ss = (lo(s2) & 0b00000001) + 2 + c
-
-    // Return data with incremented tech level and population in billions to 1 decimal place
-    return {name: genSysName(s0,s1,s2), eco: ec, gov: go, tec: te + 1, pop: po / 10, spe: sp, pro: pr, rad: ra, x: x, y: y, pw: pw, ss: ss, s0: s0, s1: s1, s2: s2}
-}
-
-// return high 8 bit byte of a 16 bit integer
-function hi(n){
-    masked = n & 0b1111111100000000
-    return masked / 256
-}
-
-// return low 8 bit byte of a 16 bit integer 
-function lo(n){
-    masked = n & 0b0000000011111111
-    return masked
-}
-
-// rotate 16 bit integer left one bit
-function rot16(n){
-    n = (n << 1) | (n >> 15)
-    n = n & 0b1111111111111111
-    return n
-}
-
-// rotate 8 bit integer left one bit
-function rot8(n){
-    n = (n << 1) | (n >> 7)
-    n = n & 0b11111111
-    return n
-}
-
-// return least significant 16 bits of integer
-function wrap_16(n){
-    return n & 0b1111111111111111
-}
-
+UI.canvas.addEventListener("click", handleMapClick, { once: true });
+UI.canvas.addEventListener("mousemove", handleMouseMove);
+UI.nextGalBut.addEventListener("click", () => showNextGalaxy(false));
