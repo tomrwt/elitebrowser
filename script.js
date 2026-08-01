@@ -286,6 +286,11 @@ function renderShortRangeChart() {
             
             // Star radius in pixels (2, 3, or 4)
             const starRadius = bit0 + 2 + carryFlag;
+            console.log(sys.name);
+            console.log("s2_hi: "+s2_hi);
+            console.log("bit0: "+bit0);
+            console.log("C: "+carryFlag);
+            console.log("radium: "+starRadius)
 
             // Draw filled star circle
             UI.ctx.beginPath();
