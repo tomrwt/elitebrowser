@@ -222,26 +222,75 @@ function renderGalaxyMap() {
     }
 }
 
+/**
+ * Renders the zoomed-in Short Range Chart matching the BBC Micro layout.
+ * Calculates label collisions and star radii using original 6502 logic.
+ */
 function renderShortRangeChart() {
     UI.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     UI.ctx.fillStyle = "yellow";
-    state.isShortRange = true;
+    UI.ctx.strokeStyle = "yellow";
     
+    state.isShortRange = true;
     UI.title.innerHTML = "SHORT RANGE CHART";
     UI.nextGalBut.innerHTML = "back";
 
     const sysCenter = state.galaxies[state.currentGalaxyIndex][state.targetSystemIndex];
+    
+    // Track occupied text rows (25 character rows on BBC Micro) to prevent overlapping labels
+    const occupiedRows = new Array(25).fill(false);
 
     for (let s = 0; s < SYSTEMS_PER_GALAXY; s++) {
         const sys = state.galaxies[state.currentGalaxyIndex][s];
+        
         const xDiff = sys.x - sysCenter.x;
         const yDiff = sys.y - sysCenter.y;
 
-        // Render systems within a specific coordinate distance
+        // Check if system is within Short Range bounds (|xDiff| < 20 and |yDiff| < 38 in 6502 coordinates)
         if (Math.abs(xDiff) < 32 && Math.abs(yDiff) < 16) {
+            
+            // Calculate screen pixel coordinates
             const plotX = (canvasWidth / 2) + (xDiff * (scaleFactor * ZOOM_MAX_MAGNIFICATION));
             const plotY = (canvasHeight / 2) + (yDiff * (scaleFactor * ZOOM_MAX_MAGNIFICATION));
-            UI.ctx.fillRect(plotX, plotY, sys.pixelWidth, 1);
+
+            // Determine BBC Micro text character row (Y-coordinate divided by 8)
+            const charRow = Math.floor(plotY / (canvasHeight / 25));
+            
+            let labelPrinted = false;
+
+            // Check if there is space for the label (checking current row, row below, row above)
+            if (charRow >= 3) { // BBC Micro skips labels on rows < 3 to prevent title overlap
+                let targetRow = null;
+                
+                if (!occupiedRows[charRow]) targetRow = charRow;
+                else if (!occupiedRows[charRow + 1]) targetRow = charRow + 1;
+                else if (charRow > 0 && !occupiedRows[charRow - 1]) targetRow = charRow - 1;
+
+                if (targetRow !== null) {
+                    occupiedRows[targetRow] = true;
+                    labelPrinted = true;
+                    
+                    // Draw system label next to the star
+                    UI.ctx.font = "12px 'Courier New', monospace";
+                    UI.ctx.fillText(sys.name, plotX + 10, plotY + 4);
+                }
+            }
+
+            // ================================================================
+            // 6502 CARRY FLAG STAR RADIUS MATH
+            // If label printed -> Carry C = 0. If label skipped -> Carry C = 1.
+            // ================================================================
+            const s2_hi = getHighByte(sys.seeds ? sys.seeds.s2 : 0); // Or extract bit 0 stored in generation
+            const bit0 = sys.starSize & 1; // Uses bit 0 of s2_hi
+            const carryFlag = labelPrinted ? 0 : 1;
+            
+            // Star radius in pixels (2, 3, or 4)
+            const starRadius = bit0 + 2 + carryFlag;
+
+            // Draw filled star circle
+            UI.ctx.beginPath();
+            UI.ctx.arc(plotX, plotY, starRadius, 0, Math.PI * 2);
+            UI.ctx.fill();
         }
     }
 
